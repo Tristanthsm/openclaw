@@ -13,6 +13,13 @@ export type UiSettings = {
   splitRatio: number; // Sidebar split ratio (0.4 to 0.7, default 0.6)
   navCollapsed: boolean; // Collapsible sidebar state
   navGroupsCollapsed: Record<string, boolean>; // Which nav groups are collapsed
+  workN8nBasePath: string; // Base path for the local n8n instance (defaults to /n8n)
+  workSearchRouterWebhookPath: string; // Webhook path under the n8n base (defaults to /webhook/cmd-search-router)
+  workSearchStrictFree: boolean; // Force router to respect internal free-tier caps
+  workSearchProvider: "auto" | "brave" | "tavily";
+  workSearchMode: "serp" | "deep";
+  workSearchMaxResults: number; // 1..20 (clamped in router as well)
+  workSearchDomains: string; // Comma-separated domain allowlist
 };
 
 export function loadSettings(): UiSettings {
@@ -32,6 +39,13 @@ export function loadSettings(): UiSettings {
     splitRatio: 0.6,
     navCollapsed: false,
     navGroupsCollapsed: {},
+    workN8nBasePath: "/n8n",
+    workSearchRouterWebhookPath: "/webhook/cmd-search-router",
+    workSearchStrictFree: true,
+    workSearchProvider: "auto",
+    workSearchMode: "serp",
+    workSearchMaxResults: 10,
+    workSearchDomains: "",
   };
 
   try {
@@ -40,6 +54,30 @@ export function loadSettings(): UiSettings {
       return defaults;
     }
     const parsed = JSON.parse(raw) as Partial<UiSettings>;
+    const workProvider =
+      parsed.workSearchProvider === "brave" ||
+      parsed.workSearchProvider === "tavily" ||
+      parsed.workSearchProvider === "auto"
+        ? parsed.workSearchProvider
+        : defaults.workSearchProvider;
+    const workMode =
+      parsed.workSearchMode === "deep" || parsed.workSearchMode === "serp"
+        ? parsed.workSearchMode
+        : defaults.workSearchMode;
+    const workN8nBasePath =
+      typeof parsed.workN8nBasePath === "string" && parsed.workN8nBasePath.trim()
+        ? parsed.workN8nBasePath.trim()
+        : defaults.workN8nBasePath;
+    const workWebhookPath =
+      typeof parsed.workSearchRouterWebhookPath === "string" &&
+      parsed.workSearchRouterWebhookPath.trim()
+        ? parsed.workSearchRouterWebhookPath.trim()
+        : defaults.workSearchRouterWebhookPath;
+    const workMaxResults =
+      typeof parsed.workSearchMaxResults === "number" &&
+      Number.isFinite(parsed.workSearchMaxResults)
+        ? Math.min(20, Math.max(1, Math.floor(parsed.workSearchMaxResults)))
+        : defaults.workSearchMaxResults;
     return {
       gatewayUrl:
         typeof parsed.gatewayUrl === "string" && parsed.gatewayUrl.trim()
@@ -77,6 +115,19 @@ export function loadSettings(): UiSettings {
         typeof parsed.navGroupsCollapsed === "object" && parsed.navGroupsCollapsed !== null
           ? parsed.navGroupsCollapsed
           : defaults.navGroupsCollapsed,
+      workN8nBasePath,
+      workSearchRouterWebhookPath: workWebhookPath,
+      workSearchStrictFree:
+        typeof parsed.workSearchStrictFree === "boolean"
+          ? parsed.workSearchStrictFree
+          : defaults.workSearchStrictFree,
+      workSearchProvider: workProvider,
+      workSearchMode: workMode,
+      workSearchMaxResults: workMaxResults,
+      workSearchDomains:
+        typeof parsed.workSearchDomains === "string"
+          ? parsed.workSearchDomains
+          : defaults.workSearchDomains,
     };
   } catch {
     return defaults;

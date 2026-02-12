@@ -6,6 +6,7 @@ import type { DevicePairingList } from "./controllers/devices.ts";
 import type { ExecApprovalRequest } from "./controllers/exec-approval.ts";
 import type { ExecApprovalsFile, ExecApprovalsSnapshot } from "./controllers/exec-approvals.ts";
 import type { SkillMessage } from "./controllers/skills.ts";
+import type { SearchRouterResult, SearchRouterStatus } from "./controllers/work-search.ts";
 import type { GatewayBrowserClient, GatewayHelloOk } from "./gateway.ts";
 import type { Tab } from "./navigation.ts";
 import type { ResolvedTheme, ThemeMode } from "./theme.ts";
@@ -78,6 +79,10 @@ import {
 } from "./app-tool-stream.ts";
 import { resolveInjectedAssistantIdentity } from "./assistant-identity.ts";
 import { loadAssistantIdentity as loadAssistantIdentityInternal } from "./controllers/assistant-identity.ts";
+import {
+  loadSearchRouterStatus as loadSearchRouterStatusInternal,
+  runSearchRouterQuery as runSearchRouterQueryInternal,
+} from "./controllers/work-search.ts";
 import { loadSettings, type UiSettings } from "./storage.ts";
 import { type ChatAttachment, type ChatQueueItem, type CronFormState } from "./ui-types.ts";
 
@@ -290,6 +295,15 @@ export class OpenClawApp extends LitElement {
   @state() cronRuns: CronRunLogEntry[] = [];
   @state() cronBusy = false;
 
+  @state() workSearchLoading = false;
+  @state() workSearchError: string | null = null;
+  @state() workSearchStatus: SearchRouterStatus | null = null;
+  @state() workSearchLastFetchAt: number | null = null;
+  @state() workSearchTestQuery = "";
+  @state() workSearchTestLoading = false;
+  @state() workSearchTestError: string | null = null;
+  @state() workSearchTestResponse: SearchRouterResult | null = null;
+
   @state() skillsLoading = false;
   @state() skillsReport: SkillStatusReport | null = null;
   @state() skillsError: string | null = null;
@@ -423,6 +437,19 @@ export class OpenClawApp extends LitElement {
 
   async loadOverview() {
     await loadOverviewInternal(this as unknown as Parameters<typeof loadOverviewInternal>[0]);
+  }
+
+  async loadWorkSearch() {
+    await loadSearchRouterStatusInternal(
+      this as unknown as Parameters<typeof loadSearchRouterStatusInternal>[0],
+    );
+  }
+
+  async runWorkSearchTest(queryOverride?: string) {
+    await runSearchRouterQueryInternal(
+      this as unknown as Parameters<typeof runSearchRouterQueryInternal>[0],
+      queryOverride,
+    );
   }
 
   async loadCron() {

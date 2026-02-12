@@ -6,6 +6,7 @@ export const TAB_GROUPS = [
     label: "Control",
     tabs: ["overview", "channels", "instances", "sessions", "usage", "cron"],
   },
+  { label: "My Work", tabs: ["searchQuotas"] },
   { label: "Agent", tabs: ["agents", "skills", "nodes"] },
   { label: "Settings", tabs: ["config", "debug", "logs"] },
 ] as const;
@@ -18,6 +19,7 @@ export type Tab =
   | "sessions"
   | "usage"
   | "cron"
+  | "searchQuotas"
   | "skills"
   | "nodes"
   | "chat"
@@ -33,6 +35,7 @@ const TAB_PATHS: Record<Tab, string> = {
   sessions: "/sessions",
   usage: "/usage",
   cron: "/cron",
+  searchQuotas: "/work/search",
   skills: "/skills",
   nodes: "/nodes",
   chat: "/chat",
@@ -144,6 +147,8 @@ export function iconForTab(tab: Tab): IconName {
       return "zap";
     case "nodes":
       return "monitor";
+    case "searchQuotas":
+      return "search";
     case "config":
       return "settings";
     case "debug":
@@ -171,6 +176,8 @@ export function titleForTab(tab: Tab) {
       return "Usage";
     case "cron":
       return "Cron Jobs";
+    case "searchQuotas":
+      return "Search & Quotas";
     case "skills":
       return "Skills";
     case "nodes":
@@ -204,6 +211,8 @@ export function subtitleForTab(tab: Tab) {
       return "";
     case "cron":
       return "Schedule wakeups and recurring agent runs.";
+    case "searchQuotas":
+      return "Monitor search router limits and test queries.";
     case "skills":
       return "Manage skill availability and API key injection.";
     case "nodes":

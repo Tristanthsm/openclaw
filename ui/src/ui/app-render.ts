@@ -77,6 +77,7 @@ import { renderOverview } from "./views/overview.ts";
 import { renderSessions } from "./views/sessions.ts";
 import { renderSkills } from "./views/skills.ts";
 import { renderUsage } from "./views/usage.ts";
+import { renderWorkSearch } from "./views/work-search.ts";
 
 const AVATAR_DATA_RE = /^data:/i;
 const AVATAR_HTTP_RE = /^https?:\/\//i;
@@ -236,6 +237,38 @@ export function renderApp(state: AppViewState) {
                 },
                 onConnect: () => state.connect(),
                 onRefresh: () => state.loadOverview(),
+              })
+            : nothing
+        }
+
+        ${
+          state.tab === "searchQuotas"
+            ? renderWorkSearch({
+                settings: state.settings,
+                loading: state.workSearchLoading,
+                error: state.workSearchError,
+                status: state.workSearchStatus,
+                lastFetchAt: state.workSearchLastFetchAt,
+                testQuery: state.workSearchTestQuery,
+                testLoading: state.workSearchTestLoading,
+                testError: state.workSearchTestError,
+                testResponse: state.workSearchTestResponse,
+                onSettingsChange: (next) => state.applySettings(next),
+                onRefresh: () => state.loadWorkSearch(),
+                onTestQueryChange: (next) => {
+                  (state as unknown as { workSearchTestQuery: string }).workSearchTestQuery = next;
+                },
+                onRunTest: (queryOverride) => state.runWorkSearchTest(queryOverride),
+                onClearTest: () => {
+                  const mutable = state as unknown as {
+                    workSearchTestQuery: string;
+                    workSearchTestError: string | null;
+                    workSearchTestResponse: unknown | null;
+                  };
+                  mutable.workSearchTestQuery = "";
+                  mutable.workSearchTestError = null;
+                  mutable.workSearchTestResponse = null;
+                },
               })
             : nothing
         }
