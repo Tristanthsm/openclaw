@@ -6,6 +6,7 @@ import type { DevicePairingList } from "./controllers/devices.ts";
 import type { ExecApprovalRequest } from "./controllers/exec-approval.ts";
 import type { ExecApprovalsFile, ExecApprovalsSnapshot } from "./controllers/exec-approvals.ts";
 import type { SkillMessage } from "./controllers/skills.ts";
+import type { ClipStudioJobStatus } from "./controllers/work-clips.ts";
 import type { SearchRouterResult, SearchRouterStatus } from "./controllers/work-search.ts";
 import type { GatewayBrowserClient, GatewayHelloOk } from "./gateway.ts";
 import type { Tab } from "./navigation.ts";
@@ -79,6 +80,10 @@ import {
 } from "./app-tool-stream.ts";
 import { resolveInjectedAssistantIdentity } from "./assistant-identity.ts";
 import { loadAssistantIdentity as loadAssistantIdentityInternal } from "./controllers/assistant-identity.ts";
+import {
+  loadClipStudioStatus as loadClipStudioStatusInternal,
+  createClipStudioJob as createClipStudioJobInternal,
+} from "./controllers/work-clips.ts";
 import {
   loadSearchRouterStatus as loadSearchRouterStatusInternal,
   runSearchRouterQuery as runSearchRouterQueryInternal,
@@ -304,6 +309,13 @@ export class OpenClawApp extends LitElement {
   @state() workSearchTestError: string | null = null;
   @state() workSearchTestResponse: SearchRouterResult | null = null;
 
+  @state() workClipsLoading = false;
+  @state() workClipsError: string | null = null;
+  @state() workClipsLastFetchAt: number | null = null;
+  @state() workClipsVideoUrl = "";
+  @state() workClipsJobId: string | null = null;
+  @state() workClipsStatus: ClipStudioJobStatus | null = null;
+
   @state() skillsLoading = false;
   @state() skillsReport: SkillStatusReport | null = null;
   @state() skillsError: string | null = null;
@@ -449,6 +461,18 @@ export class OpenClawApp extends LitElement {
     await runSearchRouterQueryInternal(
       this as unknown as Parameters<typeof runSearchRouterQueryInternal>[0],
       queryOverride,
+    );
+  }
+
+  async loadWorkClips() {
+    await loadClipStudioStatusInternal(
+      this as unknown as Parameters<typeof loadClipStudioStatusInternal>[0],
+    );
+  }
+
+  async createWorkClipsJob() {
+    await createClipStudioJobInternal(
+      this as unknown as Parameters<typeof createClipStudioJobInternal>[0],
     );
   }
 

@@ -204,6 +204,12 @@ export const icons = {
       <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
     </svg>
   `,
+  video: html`
+    <svg viewBox="0 0 24 24">
+      <path d="m16 13 5 3V8l-5 3" />
+      <rect width="14" height="12" x="2" y="6" rx="2" />
+    </svg>
+  `,
   smartphone: html`
     <svg viewBox="0 0 24 24">
       <rect width="14" height="20" x="5" y="2" rx="2" ry="2" />

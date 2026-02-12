@@ -77,6 +77,7 @@ import { renderOverview } from "./views/overview.ts";
 import { renderSessions } from "./views/sessions.ts";
 import { renderSkills } from "./views/skills.ts";
 import { renderUsage } from "./views/usage.ts";
+import { renderWorkClips } from "./views/work-clips.ts";
 import { renderWorkSearch } from "./views/work-search.ts";
 
 const AVATAR_DATA_RE = /^data:/i;
@@ -268,6 +269,38 @@ export function renderApp(state: AppViewState) {
                   mutable.workSearchTestQuery = "";
                   mutable.workSearchTestError = null;
                   mutable.workSearchTestResponse = null;
+                },
+              })
+            : nothing
+        }
+
+        ${
+          state.tab === "clipStudio"
+            ? renderWorkClips({
+                settings: state.settings,
+                loading: state.workClipsLoading,
+                error: state.workClipsError,
+                lastFetchAt: state.workClipsLastFetchAt,
+                videoUrl: state.workClipsVideoUrl,
+                jobId: state.workClipsJobId,
+                status: state.workClipsStatus,
+                onSettingsChange: (next) => state.applySettings(next),
+                onVideoUrlChange: (next) => {
+                  (state as unknown as { workClipsVideoUrl: string }).workClipsVideoUrl = next;
+                },
+                onCreate: () => state.createWorkClipsJob(),
+                onRefresh: () => state.loadWorkClips(),
+                onClear: () => {
+                  const mutable = state as unknown as {
+                    workClipsVideoUrl: string;
+                    workClipsError: string | null;
+                    workClipsJobId: string | null;
+                    workClipsStatus: unknown | null;
+                  };
+                  mutable.workClipsVideoUrl = "";
+                  mutable.workClipsError = null;
+                  mutable.workClipsJobId = null;
+                  mutable.workClipsStatus = null;
                 },
               })
             : nothing

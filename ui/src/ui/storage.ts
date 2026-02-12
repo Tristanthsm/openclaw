@@ -21,6 +21,11 @@ export type UiSettings = {
   workSearchMode: "serp" | "deep";
   workSearchMaxResults: number; // 1..20 (clamped in router as well)
   workSearchDomains: string; // Comma-separated domain allowlist
+  workClipRouterWebhookPath: string; // Webhook path under the n8n base (defaults to /webhook/cmd-clip-studio)
+  workClipMaxClips: number; // 1..20
+  workClipMinSeconds: number; // 5..120
+  workClipMaxSeconds: number; // 10..180
+  workClipSubtitleStyle: "karaoke" | "clean";
 };
 
 export function loadSettings(): UiSettings {
@@ -48,6 +53,11 @@ export function loadSettings(): UiSettings {
     workSearchMode: "serp",
     workSearchMaxResults: 10,
     workSearchDomains: "",
+    workClipRouterWebhookPath: "/webhook/cmd-clip-studio",
+    workClipMaxClips: 10,
+    workClipMinSeconds: 15,
+    workClipMaxSeconds: 45,
+    workClipSubtitleStyle: "karaoke",
   };
 
   try {
@@ -75,6 +85,11 @@ export function loadSettings(): UiSettings {
       parsed.workSearchRouterWebhookPath.trim()
         ? parsed.workSearchRouterWebhookPath.trim()
         : defaults.workSearchRouterWebhookPath;
+    const workClipWebhookPath =
+      typeof parsed.workClipRouterWebhookPath === "string" &&
+      parsed.workClipRouterWebhookPath.trim()
+        ? parsed.workClipRouterWebhookPath.trim()
+        : defaults.workClipRouterWebhookPath;
     const workSearchUiMode =
       parsed.workSearchUiMode === "assistant" || parsed.workSearchUiMode === "quick"
         ? parsed.workSearchUiMode
@@ -84,6 +99,22 @@ export function loadSettings(): UiSettings {
       Number.isFinite(parsed.workSearchMaxResults)
         ? Math.min(20, Math.max(1, Math.floor(parsed.workSearchMaxResults)))
         : defaults.workSearchMaxResults;
+    const workClipMaxClips =
+      typeof parsed.workClipMaxClips === "number" && Number.isFinite(parsed.workClipMaxClips)
+        ? Math.min(20, Math.max(1, Math.floor(parsed.workClipMaxClips)))
+        : defaults.workClipMaxClips;
+    const workClipMinSeconds =
+      typeof parsed.workClipMinSeconds === "number" && Number.isFinite(parsed.workClipMinSeconds)
+        ? Math.min(120, Math.max(5, Math.floor(parsed.workClipMinSeconds)))
+        : defaults.workClipMinSeconds;
+    const workClipMaxSeconds =
+      typeof parsed.workClipMaxSeconds === "number" && Number.isFinite(parsed.workClipMaxSeconds)
+        ? Math.min(180, Math.max(10, Math.floor(parsed.workClipMaxSeconds)))
+        : defaults.workClipMaxSeconds;
+    const workClipSubtitleStyle =
+      parsed.workClipSubtitleStyle === "clean" || parsed.workClipSubtitleStyle === "karaoke"
+        ? parsed.workClipSubtitleStyle
+        : defaults.workClipSubtitleStyle;
     return {
       gatewayUrl:
         typeof parsed.gatewayUrl === "string" && parsed.gatewayUrl.trim()
@@ -135,6 +166,11 @@ export function loadSettings(): UiSettings {
         typeof parsed.workSearchDomains === "string"
           ? parsed.workSearchDomains
           : defaults.workSearchDomains,
+      workClipRouterWebhookPath: workClipWebhookPath,
+      workClipMaxClips,
+      workClipMinSeconds,
+      workClipMaxSeconds,
+      workClipSubtitleStyle,
     };
   } catch {
     return defaults;
