@@ -178,4 +178,12 @@ export async function runSearchRouterQuery(state: WorkSearchState, queryOverride
   } finally {
     state.workSearchTestLoading = false;
   }
+
+  // Keep quotas in sync after running a query (helps explain why a provider suddenly blocks).
+  // This is a status-only call (op=status) so it does not burn provider credits.
+  try {
+    await loadSearchRouterStatus(state);
+  } catch {
+    // Ignore status refresh errors; test result is still valid.
+  }
 }

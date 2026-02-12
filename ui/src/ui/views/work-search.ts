@@ -33,9 +33,23 @@ function formatQuotaCell(used?: number, limit?: number, remaining?: number | nul
       : Math.max(0, limit - safeUsed);
   const pct = Math.min(100, Math.max(0, Math.round((safeUsed / limit) * 100)));
   return html`
-    <div class="row" style="justify-content: space-between; gap: 10px;">
-      <span class="mono">${safeRemaining}/${limit}</span>
-      <span class="muted">${pct}%</span>
+    <div>
+      <div class="row" style="justify-content: space-between; gap: 10px;">
+        <span class="mono">${safeUsed}/${limit}</span>
+        <span class="muted">${pct}%</span>
+      </div>
+      <div class="row" style="justify-content: space-between; gap: 10px; margin-top: 6px;">
+        <span class="muted">Remaining</span>
+        <span class="mono">${safeRemaining}</span>
+      </div>
+      <div
+        style="height: 8px; border-radius: 999px; background: rgba(255,255,255,0.06); overflow: hidden; margin-top: 8px;"
+        aria-label="quota progress"
+      >
+        <div
+          style=${`height: 100%; width: ${pct}%; background: ${pct >= 95 ? "#EF4444" : pct >= 80 ? "#F59E0B" : "#10B981"};`}
+        ></div>
+      </div>
     </div>
   `;
 }
@@ -48,6 +62,7 @@ export function renderWorkSearch(props: WorkSearchProps) {
   const tavilyMonthly = status?.quotas?.tavily?.monthly;
   const resetsDay = status?.quotas?.resetsAt?.dayUtc ?? null;
   const resetsMonth = status?.quotas?.resetsAt?.monthUtc ?? null;
+  const cooldown = status?.quotas?.cooldown ?? null;
   const dlq = status?.dlq ?? null;
   const stats = status?.stats ?? null;
 
@@ -255,6 +270,18 @@ export function renderWorkSearch(props: WorkSearchProps) {
             </div>
           </div>
           ${
+            cooldown?.brave || cooldown?.tavily
+              ? html`
+                  <div class="row" style="justify-content: space-between; margin-top: 8px;">
+                    <div class="muted">Cooldown</div>
+                    <div class="mono">
+                      ${cooldown?.brave ? "brave" : ""}${cooldown?.brave && cooldown?.tavily ? " + " : ""}${cooldown?.tavily ? "tavily" : ""}
+                    </div>
+                  </div>
+                `
+              : nothing
+          }
+          ${
             stats
               ? html`
                   <div class="row" style="justify-content: space-between; margin-top: 8px;">
@@ -289,20 +316,26 @@ export function renderWorkSearch(props: WorkSearchProps) {
             ? html`
                 <div class="callout danger" style="margin-top: 12px;">
                   <div class="muted">DLQ size: <span class="mono">${dlq.size ?? dlq.tail.length}</span></div>
-                  ${dlq.tail.slice(-10).map((entry) => {
-                    const raw = entry as Record<string, unknown>;
-                    const ts = String(raw.ts ?? "");
-                    const provider = String(raw.providerUsed ?? "");
-                    const message = String(raw.message ?? "");
-                    const query = String(raw.query ?? "");
-                    return html`
+                  <div class="muted" style="margin-top: 6px;">
+                    Most recent entries are shown first (older items may be from before fixes).
+                  </div>
+                  ${dlq.tail
+                    .slice(-10)
+                    .toReversed()
+                    .map((entry) => {
+                      const raw = entry as Record<string, unknown>;
+                      const ts = String(raw.ts ?? "");
+                      const provider = String(raw.providerUsed ?? "");
+                      const message = String(raw.message ?? "");
+                      const query = String(raw.query ?? "");
+                      return html`
                       <div style="margin-top: 10px;">
                         <div class="mono">${ts}${provider ? ` · ${provider}` : ""}</div>
                         ${query ? html`<div class="muted">Q: ${query}</div>` : nothing}
                         ${message ? html`<div class="muted">${message}</div>` : nothing}
                       </div>
                     `;
-                  })}
+                    })}
                 </div>
               `
             : html`
