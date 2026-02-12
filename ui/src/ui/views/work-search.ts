@@ -2,6 +2,7 @@ import { html, nothing } from "lit";
 import type { SearchRouterResult, SearchRouterStatus } from "../controllers/work-search.ts";
 import type { UiSettings } from "../storage.ts";
 import { formatRelativeTimestamp } from "../format.ts";
+import "./work-search-assistant.ts";
 
 export type WorkSearchProps = {
   settings: UiSettings;
@@ -75,57 +76,111 @@ export function renderWorkSearch(props: WorkSearchProps) {
     props.testResponse && props.testResponse.ok && props.testResponse.results?.length,
   );
   const testResults = props.testResponse?.results ?? [];
+  const uiMode = props.settings.workSearchUiMode ?? "quick";
 
   return html`
     <section class="grid grid-cols-2">
       <div class="card">
-        <div class="card-title">Search</div>
-        <div class="card-sub">Lance une requête via le router n8n (sans exposer de clés).</div>
+        <div class="row" style="justify-content: space-between; align-items: baseline;">
+          <div>
+            <div class="card-title">Search</div>
+            <div class="card-sub">Lance une requête via le router n8n (sans exposer de clés).</div>
+          </div>
+          <div class="row" style="gap: 8px;">
+            <button
+              class="btn"
+              @click=${() =>
+                props.onSettingsChange({ ...props.settings, workSearchUiMode: "quick" })}
+              ?disabled=${uiMode === "quick"}
+              title="Mode rapide"
+            >
+              Quick
+            </button>
+            <button
+              class="btn"
+              @click=${() =>
+                props.onSettingsChange({ ...props.settings, workSearchUiMode: "assistant" })}
+              ?disabled=${uiMode === "assistant"}
+              title="Assistant (questions -> requetes)"
+            >
+              Assistant
+            </button>
+          </div>
+        </div>
 
         ${props.error ? html`<div class="callout danger" style="margin-top: 12px;">${props.error}</div>` : nothing}
 
-        <div class="row" style="margin-top: 10px; gap: 10px; align-items: flex-end;">
-          <label class="field" style="flex: 1;">
-            <span>Query</span>
-            <input
-              .value=${props.testQuery}
-              placeholder="site:reddit.com openclaw n8n"
-              @input=${(e: Event) => props.onTestQueryChange((e.target as HTMLInputElement).value)}
-              @keydown=${(e: KeyboardEvent) => {
-                if (e.key === "Enter" && !props.testLoading) {
-                  props.onRunTest();
-                }
-              }}
-            />
-          </label>
-          <button class="btn" ?disabled=${props.testLoading} @click=${() => props.onRunTest()}>
-            ${props.testLoading ? "Running..." : "Run"}
-          </button>
-          <button class="btn" ?disabled=${props.testLoading} @click=${() => props.onClearTest()}>
-            Clear
-          </button>
-        </div>
+        ${
+          uiMode === "assistant"
+            ? html`
+                <work-search-assistant
+                  .settings=${props.settings}
+                  .disabled=${props.testLoading}
+                  @assistant-use-query=${(e: CustomEvent) => {
+                    const q = String((e.detail as { query?: string })?.query ?? "");
+                    if (q) {
+                      props.onTestQueryChange(q);
+                    }
+                  }}
+                  @assistant-run-query=${(e: CustomEvent) => {
+                    const q = String((e.detail as { query?: string })?.query ?? "");
+                    if (q) {
+                      props.onRunTest(q);
+                    }
+                  }}
+                  @assistant-apply-domains=${(e: CustomEvent) => {
+                    const d = String((e.detail as { domains?: string })?.domains ?? "");
+                    if (!d) {
+                      return;
+                    }
+                    props.onSettingsChange({ ...props.settings, workSearchDomains: d });
+                  }}
+                ></work-search-assistant>
+              `
+            : html`
+                <div class="row" style="margin-top: 10px; gap: 10px; align-items: flex-end;">
+                  <label class="field" style="flex: 1;">
+                    <span>Query</span>
+                    <input
+                      .value=${props.testQuery}
+                      placeholder="site:reddit.com openclaw n8n"
+                      @input=${(e: Event) =>
+                        props.onTestQueryChange((e.target as HTMLInputElement).value)}
+                      @keydown=${(e: KeyboardEvent) => {
+                        if (e.key === "Enter" && !props.testLoading) {
+                          props.onRunTest();
+                        }
+                      }}
+                    />
+                  </label>
+                  <button class="btn" ?disabled=${props.testLoading} @click=${() => props.onRunTest()}>
+                    ${props.testLoading ? "Running..." : "Run"}
+                  </button>
+                  <button class="btn" ?disabled=${props.testLoading} @click=${() => props.onClearTest()}>
+                    Clear
+                  </button>
+                </div>
 
-        <div class="row" style="margin-top: 10px; gap: 12px; align-items: center;">
-          <label class="row" style="gap: 10px; align-items: center; cursor: pointer;">
-            <input
-              type="checkbox"
-              .checked=${Boolean(props.settings.workSearchStrictFree)}
-              @change=${(e: Event) => {
-                const v = (e.target as HTMLInputElement).checked;
-                props.onSettingsChange({ ...props.settings, workSearchStrictFree: v });
-              }}
-            />
-            <span class="muted">Strict free tier</span>
-          </label>
-          <div style="flex: 1;"></div>
-          <button class="btn" ?disabled=${props.loading} @click=${() => props.onRefresh()}>
-            ${props.loading ? "Refreshing..." : "Refresh status"}
-          </button>
-          <div class="muted">
-            ${props.lastFetchAt ? html`${formatRelativeTimestamp(props.lastFetchAt)}` : nothing}
-          </div>
-        </div>
+                <div class="row" style="margin-top: 10px; gap: 12px; align-items: center;">
+                  <label class="row" style="gap: 10px; align-items: center; cursor: pointer;">
+                    <input
+                      type="checkbox"
+                      .checked=${Boolean(props.settings.workSearchStrictFree)}
+                      @change=${(e: Event) => {
+                        const v = (e.target as HTMLInputElement).checked;
+                        props.onSettingsChange({ ...props.settings, workSearchStrictFree: v });
+                      }}
+                    />
+                    <span class="muted">Strict free tier</span>
+                  </label>
+                  <div style="flex: 1;"></div>
+                  <button class="btn" ?disabled=${props.loading} @click=${() => props.onRefresh()}>
+                    ${props.loading ? "Refreshing..." : "Refresh status"}
+                  </button>
+                  <div class="muted">
+                    ${props.lastFetchAt ? html`${formatRelativeTimestamp(props.lastFetchAt)}` : nothing}
+                  </div>
+                </div>
 
         ${
           props.testError
@@ -244,6 +299,8 @@ export function renderWorkSearch(props: WorkSearchProps) {
             </label>
           </div>
         </details>
+              `
+        }
       </div>
 
       <div class="card">

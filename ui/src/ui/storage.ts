@@ -13,6 +13,7 @@ export type UiSettings = {
   splitRatio: number; // Sidebar split ratio (0.4 to 0.7, default 0.6)
   navCollapsed: boolean; // Collapsible sidebar state
   navGroupsCollapsed: Record<string, boolean>; // Which nav groups are collapsed
+  workSearchUiMode: "quick" | "assistant"; // UI mode for Search & Quotas
   workN8nBasePath: string; // Base path for the local n8n instance (defaults to /n8n)
   workSearchRouterWebhookPath: string; // Webhook path under the n8n base (defaults to /webhook/cmd-search-router)
   workSearchStrictFree: boolean; // Force router to respect internal free-tier caps
@@ -39,6 +40,7 @@ export function loadSettings(): UiSettings {
     splitRatio: 0.6,
     navCollapsed: false,
     navGroupsCollapsed: {},
+    workSearchUiMode: "quick",
     workN8nBasePath: "/n8n",
     workSearchRouterWebhookPath: "/webhook/cmd-search-router",
     workSearchStrictFree: true,
@@ -73,6 +75,10 @@ export function loadSettings(): UiSettings {
       parsed.workSearchRouterWebhookPath.trim()
         ? parsed.workSearchRouterWebhookPath.trim()
         : defaults.workSearchRouterWebhookPath;
+    const workSearchUiMode =
+      parsed.workSearchUiMode === "assistant" || parsed.workSearchUiMode === "quick"
+        ? parsed.workSearchUiMode
+        : defaults.workSearchUiMode;
     const workMaxResults =
       typeof parsed.workSearchMaxResults === "number" &&
       Number.isFinite(parsed.workSearchMaxResults)
@@ -115,6 +121,7 @@ export function loadSettings(): UiSettings {
         typeof parsed.navGroupsCollapsed === "object" && parsed.navGroupsCollapsed !== null
           ? parsed.navGroupsCollapsed
           : defaults.navGroupsCollapsed,
+      workSearchUiMode,
       workN8nBasePath,
       workSearchRouterWebhookPath: workWebhookPath,
       workSearchStrictFree:
