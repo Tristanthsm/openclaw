@@ -22,6 +22,7 @@ import { loadNodes } from "./controllers/nodes.ts";
 import { loadPresence } from "./controllers/presence.ts";
 import { loadSessions } from "./controllers/sessions.ts";
 import { loadSkills } from "./controllers/skills.ts";
+import { loadSearchRouterStatus } from "./controllers/work-search.ts";
 import {
   inferBasePathFromPathname,
   normalizeBasePath,
@@ -106,10 +107,6 @@ export function applySettingsFromUrl(host: SettingsHost) {
   }
 
   if (passwordRaw != null) {
-    const password = passwordRaw.trim();
-    if (password) {
-      (host as { password: string }).password = password;
-    }
     params.delete("password");
     hashParams.delete("password");
     shouldCleanUrl = true;
@@ -196,6 +193,9 @@ export async function refreshActiveTab(host: SettingsHost) {
   }
   if (host.tab === "cron") {
     await loadCron(host);
+  }
+  if (host.tab === "searchQuotas") {
+    await loadSearchRouterStatus(host as unknown as Parameters<typeof loadSearchRouterStatus>[0]);
   }
   if (host.tab === "skills") {
     await loadSkills(host as unknown as OpenClawApp);
