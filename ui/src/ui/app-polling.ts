@@ -80,6 +80,10 @@ function shouldPollWorkClips(host: PollingHost) {
   if (!jobId) {
     return false;
   }
+  // Stop polling once we have a terminal failure.
+  if (host.workClipsStatus && (host.workClipsStatus as { ok?: boolean }).ok === false) {
+    return false;
+  }
   const state = host.workClipsStatus?.state ?? null;
   // Keep polling while queued/running/unknown.
   return state !== "done" && state !== "error";

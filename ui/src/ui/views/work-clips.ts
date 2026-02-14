@@ -18,6 +18,31 @@ export type WorkClipsProps = {
   onClear: () => void;
 };
 
+function summarizeClipperError(raw: string) {
+  const msg = String(raw || "").trim();
+  if (!msg) {
+    return { title: "Erreur", detail: "", hint: null as string | null };
+  }
+  if (msg.includes("Sign in to confirm") || msg.toLowerCase().includes("not a bot")) {
+    return {
+      title: "YouTube bloque l'extraction (verification anti-bot)",
+      detail: msg,
+      hint: "Solution: fournir des cookies YouTube au clipper (fichier sur le VPS, jamais dans le chat). Sans cookies, certains liens YouTube echouent.",
+    };
+  }
+  if (
+    msg.includes("No supported JavaScript runtime could be found") ||
+    msg.includes("js-runtimes")
+  ) {
+    return {
+      title: "yt-dlp a besoin d'un runtime JS (Deno/Node)",
+      detail: msg,
+      hint: "Solution: installer Deno dans le conteneur clipper et utiliser --js-runtimes (on peut le faire cote VPS).",
+    };
+  }
+  return { title: "Erreur clipper", detail: msg, hint: null as string | null };
+}
+
 function renderClip(clip: ClipAsset, i: number) {
   const title = clip.title || `Clip ${i + 1}`;
   const range =
@@ -85,9 +110,14 @@ function renderClip(clip: ClipAsset, i: number) {
 export function renderWorkClips(props: WorkClipsProps) {
   const status = props.status;
   const state = status?.state ?? null;
+  const isStatusError = status?.ok === false;
+  const displayState = isStatusError ? "error" : state;
   const progress = typeof status?.progress === "number" ? Math.round(status.progress) : null;
   const clips = Array.isArray(status?.clips) ? status?.clips : [];
-  const pollingActive = Boolean(props.jobId && state !== "done" && state !== "error");
+  const pollingActive = Boolean(
+    props.jobId && !isStatusError && state !== "done" && state !== "error",
+  );
+  const clipperErr = status?.error?.message ? summarizeClipperError(status.error.message) : null;
 
   return html`
     <section class="grid grid-cols-2">
@@ -229,7 +259,7 @@ export function renderWorkClips(props: WorkClipsProps) {
           </div>
           <div class="row" style="justify-content: space-between; margin-top: 8px;">
             <div class="muted">State</div>
-            <div class="mono">${state || "n/a"}${progress !== null ? ` · ${progress}%` : ""}</div>
+            <div class="mono">${displayState || "n/a"}${progress !== null ? ` · ${progress}%` : ""}</div>
           </div>
           ${
             progress !== null
@@ -246,8 +276,31 @@ export function renderWorkClips(props: WorkClipsProps) {
               : nothing
           }
           ${
-            status?.error?.message
-              ? html`<div class="callout danger" style="margin-top: 12px;">${status.error.message}</div>`
+            clipperErr
+              ? html`
+                <div class="callout danger" style="margin-top: 12px;">
+                  <div style="font-weight: 650;">${clipperErr.title}</div>
+                  ${clipperErr.hint ? html`<div class="muted" style="margin-top: 6px;">${clipperErr.hint}</div>` : nothing}
+                  <details style="margin-top: 10px;">
+                    <summary class="muted" style="cursor: pointer;">Details techniques</summary>
+                    <pre style="white-space: pre-wrap; margin-top: 10px;">${clipperErr.detail}</pre>
+                    <div class="row" style="margin-top: 10px;">
+                      <button
+                        class="btn"
+                        @click=${async () => {
+                          try {
+                            await navigator.clipboard.writeText(String(clipperErr.detail || ""));
+                          } catch {
+                            // ignore
+                          }
+                        }}
+                      >
+                        Copy full error
+                      </button>
+                    </div>
+                  </details>
+                </div>
+              `
               : nothing
           }
         </div>
