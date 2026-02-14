@@ -139,6 +139,16 @@ export async function createClipStudioJob(state: WorkClipsState) {
     }
     state.workClipsStatus = data;
     state.workClipsLastFetchAt = Date.now();
+
+    // Immediately pull the first status so the UI shows progress/state changes without
+    // requiring a manual refresh right after job creation.
+    if (state.workClipsJobId) {
+      const statusRes = await postJson(url, { op: "status", jobId: state.workClipsJobId });
+      if (statusRes.ok) {
+        state.workClipsStatus = statusRes.data as ClipStudioJobStatus;
+        state.workClipsLastFetchAt = Date.now();
+      }
+    }
   } catch (err) {
     state.workClipsError = String(err);
   } finally {

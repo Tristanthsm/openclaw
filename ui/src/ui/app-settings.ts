@@ -6,6 +6,8 @@ import {
   stopLogsPolling,
   startDebugPolling,
   stopDebugPolling,
+  startWorkClipsPolling,
+  stopWorkClipsPolling,
 } from "./app-polling.ts";
 import { scheduleChatScroll, scheduleLogsScroll } from "./app-scroll.ts";
 import { loadAgentIdentities, loadAgentIdentity } from "./controllers/agent-identity.ts";
@@ -22,6 +24,7 @@ import { loadNodes } from "./controllers/nodes.ts";
 import { loadPresence } from "./controllers/presence.ts";
 import { loadSessions } from "./controllers/sessions.ts";
 import { loadSkills } from "./controllers/skills.ts";
+import { loadClipStudioStatus } from "./controllers/work-clips.ts";
 import { loadSearchRouterStatus } from "./controllers/work-search.ts";
 import {
   inferBasePathFromPathname,
@@ -160,6 +163,11 @@ export function setTab(host: SettingsHost, next: Tab) {
   } else {
     stopDebugPolling(host as unknown as Parameters<typeof stopDebugPolling>[0]);
   }
+  if (next === "clipStudio") {
+    startWorkClipsPolling(host as unknown as Parameters<typeof startWorkClipsPolling>[0]);
+  } else {
+    stopWorkClipsPolling(host as unknown as Parameters<typeof stopWorkClipsPolling>[0]);
+  }
   void refreshActiveTab(host);
   syncUrlWithTab(host, next, false);
 }
@@ -196,6 +204,9 @@ export async function refreshActiveTab(host: SettingsHost) {
   }
   if (host.tab === "searchQuotas") {
     await loadSearchRouterStatus(host as unknown as Parameters<typeof loadSearchRouterStatus>[0]);
+  }
+  if (host.tab === "clipStudio") {
+    await loadClipStudioStatus(host as unknown as OpenClawApp);
   }
   if (host.tab === "skills") {
     await loadSkills(host as unknown as OpenClawApp);

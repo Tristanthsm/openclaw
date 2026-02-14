@@ -7,6 +7,8 @@ import {
   stopNodesPolling,
   startDebugPolling,
   stopDebugPolling,
+  startWorkClipsPolling,
+  stopWorkClipsPolling,
 } from "./app-polling.ts";
 import { observeTopbar, scheduleChatScroll, scheduleLogsScroll } from "./app-scroll.ts";
 import {
@@ -49,6 +51,9 @@ export function handleConnected(host: LifecycleHost) {
   if (host.tab === "debug") {
     startDebugPolling(host as unknown as Parameters<typeof startDebugPolling>[0]);
   }
+  if (host.tab === "clipStudio") {
+    startWorkClipsPolling(host as unknown as Parameters<typeof startWorkClipsPolling>[0]);
+  }
 }
 
 export function handleFirstUpdated(host: LifecycleHost) {
@@ -60,6 +65,7 @@ export function handleDisconnected(host: LifecycleHost) {
   stopNodesPolling(host as unknown as Parameters<typeof stopNodesPolling>[0]);
   stopLogsPolling(host as unknown as Parameters<typeof stopLogsPolling>[0]);
   stopDebugPolling(host as unknown as Parameters<typeof stopDebugPolling>[0]);
+  stopWorkClipsPolling(host as unknown as Parameters<typeof stopWorkClipsPolling>[0]);
   detachThemeListener(host as unknown as Parameters<typeof detachThemeListener>[0]);
   host.topbarObserver?.disconnect();
   host.topbarObserver = null;

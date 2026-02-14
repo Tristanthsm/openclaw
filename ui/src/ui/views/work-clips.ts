@@ -36,6 +36,22 @@ function renderClip(clip: ClipAsset, i: number) {
         </div>
         <div class="row" style="gap: 8px; align-items: flex-start;">
           ${
+            clip.hook
+              ? html`<button
+                  class="btn"
+                  @click=${async () => {
+                    try {
+                      await navigator.clipboard.writeText(String(clip.hook || ""));
+                    } catch {
+                      // Ignore clipboard errors (permissions / insecure context).
+                    }
+                  }}
+                >
+                  Copy hook
+                </button>`
+              : nothing
+          }
+          ${
             clip.captionsUrl
               ? html`<a class="btn" href=${clip.captionsUrl} target="_blank" rel="noreferrer">Captions</a>`
               : nothing
@@ -47,6 +63,16 @@ function renderClip(clip: ClipAsset, i: number) {
           }
         </div>
       </div>
+      ${
+        clip.downloadUrl
+          ? html`<video
+              style="width: 100%; margin-top: 12px; border-radius: 14px; background: #000;"
+              controls
+              preload="metadata"
+              src=${clip.downloadUrl}
+            ></video>`
+          : nothing
+      }
       ${
         clip.hook
           ? html`<div style="margin-top: 10px;"><span class="muted">Hook:</span> ${clip.hook}</div>`
@@ -61,6 +87,7 @@ export function renderWorkClips(props: WorkClipsProps) {
   const state = status?.state ?? null;
   const progress = typeof status?.progress === "number" ? Math.round(status.progress) : null;
   const clips = Array.isArray(status?.clips) ? status?.clips : [];
+  const pollingActive = Boolean(props.jobId && state !== "done" && state !== "error");
 
   return html`
     <section class="grid grid-cols-2">
@@ -193,7 +220,7 @@ export function renderWorkClips(props: WorkClipsProps) {
 
       <div class="card">
         <div class="card-title">Job</div>
-        <div class="card-sub">Etat + clips generes.</div>
+        <div class="card-sub">Etat + progression.</div>
 
         <div class="callout" style="margin-top: 14px;">
           <div class="row" style="justify-content: space-between;">
@@ -205,20 +232,47 @@ export function renderWorkClips(props: WorkClipsProps) {
             <div class="mono">${state || "n/a"}${progress !== null ? ` · ${progress}%` : ""}</div>
           </div>
           ${
+            progress !== null
+              ? html`<progress style="width: 100%; margin-top: 10px;" value=${String(progress)} max="100"></progress>`
+              : nothing
+          }
+          ${
+            pollingActive
+              ? html`
+                  <div class="muted" style="margin-top: 10px">
+                    Auto-refresh actif (2.5s) tant que le job est en cours.
+                  </div>
+                `
+              : nothing
+          }
+          ${
             status?.error?.message
               ? html`<div class="callout danger" style="margin-top: 12px;">${status.error.message}</div>`
               : nothing
           }
         </div>
+        <div class="callout" style="margin-top: 12px">
+          ${clips.length ? `${clips.length} clip(s) detecte(s).` : "Aucun clip pour l'instant (job en cours ou pas encore refresh)."}
+        </div>
+      </div>
+    </section>
+
+    <section class="grid grid-cols-1" style="margin-top: 14px;">
+      <div class="card">
+        <div class="card-title">Clips</div>
+        <div class="card-sub">Resultats finaux (preview + download).</div>
 
         ${
           clips.length
-            ? html`
-              <div class="card-title" style="margin-top: 18px;">Clips</div>
-              ${clips.slice(0, 12).map((c, i) => renderClip(c, i))}
-            `
+            ? html`${clips.slice(0, 12).map((c, i) => renderClip(c, i))}`
             : html`
-                <div class="callout" style="margin-top: 12px">No clips yet.</div>
+                <div class="callout" style="margin-top: 12px">
+                  <div style="font-weight: 600">Rien a afficher pour le moment</div>
+                  <div class="muted" style="margin-top: 6px">
+                    Si le job est <span class="mono">queued</span>/<span class="mono">running</span>, laisse
+                    l'onglet ouvert: l'auto-refresh remontera les clips des qu'ils sont prets.
+                  </div>
+                </div>
               `
         }
       </div>
