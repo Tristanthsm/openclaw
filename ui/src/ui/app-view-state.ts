@@ -237,6 +237,7 @@ export type AppViewState = {
   logsAtBottom: boolean;
   client: GatewayBrowserClient | null;
   refreshSessionsAfterChat: Set<string>;
+  notesContent: string;
   connect: () => void;
   setTab: (tab: Tab) => void;
   setTheme: (theme: ThemeMode, context?: ThemeTransitionContext) => void;
@@ -302,4 +303,5 @@ export type AppViewState = {
   handleOpenSidebar: (content: string) => void;
   handleCloseSidebar: () => void;
   handleSplitRatioChange: (ratio: number) => void;
+  setNotesContent: (content: string) => void;
 };

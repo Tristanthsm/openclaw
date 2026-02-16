@@ -153,6 +153,8 @@ export class OpenClawApp extends LitElement {
   @state() sidebarError: string | null = null;
   @state() splitRatio = this.settings.splitRatio;
 
+  @state() notesContent = localStorage.getItem("openclaw.notes.content.v1") ?? "";
+
   @state() nodesLoading = false;
   @state() nodes: Array<Record<string, unknown>> = [];
   @state() devicesLoading = false;
@@ -391,6 +393,20 @@ export class OpenClawApp extends LitElement {
 
   protected updated(changed: Map<PropertyKey, unknown>) {
     handleUpdated(this as unknown as Parameters<typeof handleUpdated>[0], changed);
+
+    if (this.tab === "notes" && changed.has("chatStream")) {
+      const content = this.chatStream;
+      if (content) {
+        // Look for [NOTES]...[/NOTES] block
+        const match = content.match(/\[NOTES\]([\s\S]*?)\[\/NOTES\]/);
+        if (match) {
+          const newNotes = match[1].trim();
+          if (newNotes !== this.notesContent) {
+            this.setNotesContent(newNotes);
+          }
+        }
+      }
+    }
   }
 
   connect() {
@@ -615,6 +631,11 @@ export class OpenClawApp extends LitElement {
     const newRatio = Math.max(0.4, Math.min(0.7, ratio));
     this.splitRatio = newRatio;
     this.applySettings({ ...this.settings, splitRatio: newRatio });
+  }
+
+  setNotesContent(content: string) {
+    this.notesContent = content;
+    localStorage.setItem("openclaw.notes.content.v1", content);
   }
 
   render() {
