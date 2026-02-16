@@ -1,5 +1,7 @@
 import { html, nothing } from "lit";
+import type { ChatHost } from "../app-chat.ts";
 import type { AppViewState } from "../app-view-state.ts";
+import type { ChatState } from "../controllers/chat.ts";
 import type { ChatProps } from "./chat.ts";
 import { parseAgentSessionKey } from "../../../../src/sessions/session-key-utils.js";
 import { refreshChatAvatar } from "../app-chat.ts";
@@ -69,8 +71,8 @@ export function renderNotes(state: AppViewState) {
         lastActiveSessionKey: next,
       });
       void app.loadAssistantIdentity();
-      void loadChatHistory(state as any);
-      void refreshChatAvatar(state as any);
+      void loadChatHistory(state as unknown as ChatState);
+      void refreshChatAvatar(state as unknown as ChatHost);
     },
     thinkingLevel: state.chatThinkingLevel,
     showThinking,
@@ -92,9 +94,10 @@ export function renderNotes(state: AppViewState) {
     focusMode: chatFocus,
     onRefresh: () => {
       app.resetToolStream();
-      return Promise.all([loadChatHistory(state as any), refreshChatAvatar(state as any)]).then(
-        () => {},
-      );
+      return Promise.all([
+        loadChatHistory(state as unknown as ChatState),
+        refreshChatAvatar(state as unknown as ChatHost),
+      ]).then(() => {});
     },
     onToggleFocusMode: () => {
       // No-op in notes view
