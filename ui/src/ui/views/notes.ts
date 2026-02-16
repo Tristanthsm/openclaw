@@ -1,4 +1,4 @@
-import { html, nothing } from "lit";
+import { html } from "lit";
 import type { ChatHost } from "../app-chat.ts";
 import type { AppViewState } from "../app-view-state.ts";
 import type { ChatState } from "../controllers/chat.ts";
@@ -25,8 +25,6 @@ type AppMethods = {
 export function renderNotes(state: AppViewState) {
   const app = state as unknown as AppMethods;
 
-  const isChat = false;
-  const chatFocus = false;
   const showThinking = state.onboarding ? false : state.settings.chatShowThinking;
   const chatDisabledReason = state.connected ? null : "Disconnected from gateway.";
 
@@ -91,7 +89,7 @@ export function renderNotes(state: AppViewState) {
     disabledReason: chatDisabledReason,
     error: state.lastError,
     sessions: state.sessionsResult,
-    focusMode: chatFocus,
+    focusMode: false,
     onRefresh: () => {
       app.resetToolStream();
       return Promise.all([
