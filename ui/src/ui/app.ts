@@ -318,6 +318,12 @@ export class OpenClawApp extends LitElement {
   @state() workClipsJobId: string | null = null;
   @state() workClipsStatus: ClipStudioJobStatus | null = null;
 
+  @state() workModelVisualizerLoading = false;
+  @state() workModelVisualizerError: string | null = null;
+  @state() workModelVisualizerQuery = "";
+  @state() workModelVisualizerModelName = "gpt2";
+  @state() workModelVisualizerResult: import("./types.ts").ModelAnalysisResult | null = null;
+
   @state() skillsLoading = false;
   @state() skillsReport: SkillStatusReport | null = null;
   @state() skillsError: string | null = null;
@@ -491,6 +497,38 @@ export class OpenClawApp extends LitElement {
     await createClipStudioJobInternal(
       this as unknown as Parameters<typeof createClipStudioJobInternal>[0],
     );
+  }
+
+  async handleModelAnalyze() {
+    if (!this.workModelVisualizerQuery || this.workModelVisualizerLoading) {
+      return;
+    }
+
+    this.workModelVisualizerLoading = true;
+    this.workModelVisualizerError = null;
+    this.workModelVisualizerResult = null;
+
+    try {
+      const response = await fetch("/api/model/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: this.workModelVisualizerQuery,
+          model_name: this.workModelVisualizerModelName,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Erreur API: ${response.status} ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      this.workModelVisualizerResult = result;
+    } catch (err) {
+      this.workModelVisualizerError = String(err);
+    } finally {
+      this.workModelVisualizerLoading = false;
+    }
   }
 
   async loadCron() {

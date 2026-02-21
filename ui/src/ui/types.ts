@@ -772,3 +772,12 @@ export type LogEntry = {
   message?: string | null;
   meta?: Record<string, unknown> | null;
 };
+
+export type ModelAnalysisResult = {
+  ok: boolean;
+  source: "real" | "simulated";
+  model: string;
+  layers: number;
+  heads: number;
+  activations: number[][]; // [layer][head]
+};

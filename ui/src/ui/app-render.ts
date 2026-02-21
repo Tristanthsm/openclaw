@@ -72,6 +72,7 @@ import { renderExecApprovalPrompt } from "./views/exec-approval.ts";
 import { renderGatewayUrlConfirmation } from "./views/gateway-url-confirmation.ts";
 import { renderInstances } from "./views/instances.ts";
 import { renderLogs } from "./views/logs.ts";
+import { renderModelVisualizer } from "./views/model-visualizer.ts";
 import { renderNodes } from "./views/nodes.ts";
 import { renderNotes } from "./views/notes.ts";
 import { renderOverview } from "./views/overview.ts";
@@ -305,6 +306,26 @@ export function renderApp(state: AppViewState) {
                   mutable.workClipsJobId = null;
                   mutable.workClipsStatus = null;
                 },
+              })
+            : nothing
+        }
+
+        ${
+          state.tab === "modelVisualizer"
+            ? renderModelVisualizer({
+                loading: state.workModelVisualizerLoading,
+                error: state.workModelVisualizerError,
+                query: state.workModelVisualizerQuery,
+                modelName: state.workModelVisualizerModelName,
+                onQueryChange: (next) => {
+                  (state as any).workModelVisualizerQuery = next;
+                },
+                onModelChange: (next) => {
+                  (state as any).workModelVisualizerModelName = next;
+                  (state as any).workModelVisualizerResult = null;
+                },
+                onAnalyze: () => state.handleModelAnalyze(),
+                analysisResult: state.workModelVisualizerResult,
               })
             : nothing
         }

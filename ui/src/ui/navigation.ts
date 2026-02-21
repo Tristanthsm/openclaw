@@ -6,7 +6,7 @@ export const TAB_GROUPS = [
     label: "Control",
     tabs: ["overview", "notes", "channels", "instances", "sessions", "usage", "cron"],
   },
-  { label: "My Work", tabs: ["searchQuotas", "clipStudio"] },
+  { label: "My Work", tabs: ["searchQuotas", "clipStudio", "modelVisualizer"] },
   { label: "Agent", tabs: ["agents", "skills", "nodes"] },
   { label: "Settings", tabs: ["config", "debug", "logs"] },
 ] as const;
@@ -22,6 +22,7 @@ export type Tab =
   | "cron"
   | "searchQuotas"
   | "clipStudio"
+  | "modelVisualizer"
   | "skills"
   | "nodes"
   | "chat"
@@ -40,6 +41,7 @@ const TAB_PATHS: Record<Tab, string> = {
   cron: "/cron",
   searchQuotas: "/work/search",
   clipStudio: "/work/clips",
+  modelVisualizer: "/work/visualizer",
   skills: "/skills",
   nodes: "/nodes",
   chat: "/chat",
@@ -157,6 +159,8 @@ export function iconForTab(tab: Tab): IconName {
       return "search";
     case "clipStudio":
       return "video";
+    case "modelVisualizer":
+      return "brain";
     case "config":
       return "settings";
     case "debug":
@@ -190,6 +194,8 @@ export function titleForTab(tab: Tab) {
       return "Search & Quotas";
     case "clipStudio":
       return "Clip Studio";
+    case "modelVisualizer":
+      return "Model Visualizer";
     case "skills":
       return "Skills";
     case "nodes":
@@ -229,6 +235,8 @@ export function subtitleForTab(tab: Tab) {
       return "Monitor search router limits and test queries.";
     case "clipStudio":
       return "Generate TikTok-ready clips from a single video link.";
+    case "modelVisualizer":
+      return "Inspect AI model internals (activations, sectors, attention) in real-time.";
     case "skills":
       return "Manage skill availability and API key injection.";
     case "nodes":

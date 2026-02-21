@@ -32,6 +32,7 @@ import type {
   SessionsListResult,
   SkillStatusReport,
   StatusSummary,
+  ModelAnalysisResult,
 } from "./types.ts";
 import type { ChatAttachment, ChatQueueItem, CronFormState } from "./ui-types.ts";
 import type { NostrProfileFormState } from "./views/channels.nostr-profile-form.ts";
@@ -206,6 +207,11 @@ export type AppViewState = {
   workClipsVideoUrl: string;
   workClipsJobId: string | null;
   workClipsStatus: ClipStudioJobStatus | null;
+  workModelVisualizerLoading: boolean;
+  workModelVisualizerError: string | null;
+  workModelVisualizerQuery: string;
+  workModelVisualizerModelName: string;
+  workModelVisualizerResult: ModelAnalysisResult | null;
   skillsLoading: boolean;
   skillsReport: SkillStatusReport | null;
   skillsError: string | null;
@@ -247,6 +253,7 @@ export type AppViewState = {
   runWorkSearchTest: (queryOverride?: string) => Promise<void>;
   loadWorkClips: () => Promise<void>;
   createWorkClipsJob: () => Promise<void>;
+  handleModelAnalyze: () => Promise<void>;
   loadAssistantIdentity: () => Promise<void>;
   loadCron: () => Promise<void>;
   handleWhatsAppStart: (force: boolean) => Promise<void>;
