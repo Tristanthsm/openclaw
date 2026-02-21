@@ -211,6 +211,7 @@ export type AppViewState = {
   workModelVisualizerError: string | null;
   workModelVisualizerQuery: string;
   workModelVisualizerModelName: string;
+  workModelVisualizerAvailableModels: { id: string; label: string }[];
   workModelVisualizerResult: ModelAnalysisResult | null;
   skillsLoading: boolean;
   skillsReport: SkillStatusReport | null;
@@ -254,6 +255,7 @@ export type AppViewState = {
   loadWorkClips: () => Promise<void>;
   createWorkClipsJob: () => Promise<void>;
   handleModelAnalyze: () => Promise<void>;
+  fetchOllamaModels: () => Promise<void>;
   loadAssistantIdentity: () => Promise<void>;
   loadCron: () => Promise<void>;
   handleWhatsAppStart: (force: boolean) => Promise<void>;

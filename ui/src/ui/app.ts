@@ -322,6 +322,7 @@ export class OpenClawApp extends LitElement {
   @state() workModelVisualizerError: string | null = null;
   @state() workModelVisualizerQuery = "";
   @state() workModelVisualizerModelName = "gpt2";
+  @state() workModelVisualizerAvailableModels: { id: string; label: string }[] = [];
   @state() workModelVisualizerResult: import("./types.ts").ModelAnalysisResult | null = null;
 
   @state() skillsLoading = false;
@@ -528,6 +529,23 @@ export class OpenClawApp extends LitElement {
       this.workModelVisualizerError = String(err);
     } finally {
       this.workModelVisualizerLoading = false;
+    }
+  }
+
+  async fetchOllamaModels() {
+    try {
+      const r = await fetch("/api/model/ollama-models");
+      if (!r.ok) {
+        return;
+      }
+      const data = await r.json();
+      if (Array.isArray(data.models) && data.models.length > 0) {
+        this.workModelVisualizerAvailableModels = data.models;
+        // auto-select first Ollama model
+        this.workModelVisualizerModelName = data.models[0].id;
+      }
+    } catch {
+      // Ollama not reachable, keep defaults
     }
   }
 

@@ -312,21 +312,24 @@ export function renderApp(state: AppViewState) {
 
         ${
           state.tab === "modelVisualizer"
-            ? renderModelVisualizer({
+            ? (state.workModelVisualizerAvailableModels.length === 0 &&
+                void state.fetchOllamaModels(),
+              renderModelVisualizer({
                 loading: state.workModelVisualizerLoading,
                 error: state.workModelVisualizerError,
                 query: state.workModelVisualizerQuery,
                 modelName: state.workModelVisualizerModelName,
+                availableModels: state.workModelVisualizerAvailableModels,
                 onQueryChange: (next) => {
-                  (state as any).workModelVisualizerQuery = next;
+                  (state as unknown as Record<string, unknown>).workModelVisualizerQuery = next;
                 },
                 onModelChange: (next) => {
-                  (state as any).workModelVisualizerModelName = next;
-                  (state as any).workModelVisualizerResult = null;
+                  (state as unknown as Record<string, unknown>).workModelVisualizerModelName = next;
+                  (state as unknown as Record<string, unknown>).workModelVisualizerResult = null;
                 },
                 onAnalyze: () => state.handleModelAnalyze(),
                 analysisResult: state.workModelVisualizerResult,
-              })
+              }))
             : nothing
         }
 
